@@ -64,11 +64,11 @@ export default function PatientProfilePage() {
     <div className="min-h-screen bg-background">
       {/* Dark Teal Header */}
       <header className="bg-primary text-primary-foreground sticky top-0 z-40 shadow-md">
-        <div className="px-8 py-6">
-          <div className="flex items-center justify-between">
+        <div className="px-4 sm:px-6 lg:px-8 py-4 sm:py-6">
+          <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4">
             <div>
-              <h1 className="text-2xl font-bold">Patient Medical Profile</h1>
-              <p className="text-primary-foreground/80 text-sm mt-1">Medication history and interaction tracking</p>
+              <h1 className="text-xl sm:text-2xl font-bold">Patient Medical Profile</h1>
+              <p className="text-primary-foreground/80 text-xs sm:text-sm mt-1">Medication history and interaction tracking</p>
             </div>
             <RiskScoreBadge score={riskScore} />
           </div>
@@ -76,16 +76,16 @@ export default function PatientProfilePage() {
       </header>
 
       {/* Main Content */}
-      <div className="flex gap-6 p-8">
+      <div className="flex flex-col lg:flex-row gap-4 sm:gap-6 p-4 sm:p-6 lg:p-8">
         {/* Left Sidebar */}
-        <div className="w-80">
+        <aside className="w-full lg:w-80">
           <PatientSidebar patient={patient} />
-        </div>
+        </aside>
 
         {/* Main Area - Timeline */}
-        <div className="flex-1">
+        <main className="flex-1">
           <MedicationTimeline medications={medications} />
-        </div>
+        </main>
       </div>
     </div>
   );

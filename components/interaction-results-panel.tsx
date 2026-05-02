@@ -76,19 +76,19 @@ export function InteractionResultsPanel() {
   };
 
   return (
-    <div className="w-full">
+    <main className="w-full" lang="en">
       {/* Header */}
-      <div className="bg-gradient-to-r from-[#0f3638] to-[#1a4d50] px-6 py-4 mb-6 rounded-t-lg">
-        <h2 className="text-2xl font-bold text-white">Drug Interaction Analysis Results</h2>
+      <header className="bg-gradient-to-r from-[#0f3638] to-[#1a4d50] px-4 sm:px-6 py-4 mb-6 rounded-t-lg">
+        <h1 className="text-2xl font-bold text-white">Drug Interaction Analysis Results</h1>
         <p className="text-teal-100 text-sm mt-1">Comprehensive interaction report using graph algorithms</p>
-      </div>
+      </header>
 
       {/* Main Content */}
-      <div className="grid grid-cols-1 lg:grid-cols-2 gap-6 px-6 py-6 bg-white dark:bg-slate-950">
+      <div className="grid grid-cols-1 lg:grid-cols-2 gap-4 sm:gap-6 px-4 sm:px-6 py-4 sm:py-6 bg-white dark:bg-slate-950">
         
         {/* LEFT: Risk Score Gauge */}
-        <div className="flex flex-col items-center justify-center py-8">
-          <div className="relative w-64 h-64 flex items-center justify-center">
+        <section className="flex flex-col items-center justify-center py-4 sm:py-8" aria-label="Risk score gauge">
+          <div className="relative w-48 sm:w-64 h-48 sm:h-64 flex items-center justify-center">
             {/* SVG Arc Gauge */}
             <svg width="260" height="260" viewBox="0 0 260 260" className="transform -rotate-90">
               {/* Background arc */}
@@ -99,6 +99,7 @@ export function InteractionResultsPanel() {
                 fill="none"
                 stroke="#e5e7eb"
                 strokeWidth="20"
+                aria-hidden="true"
               />
               {/* Colored zones background */}
               <circle
@@ -121,34 +122,35 @@ export function InteractionResultsPanel() {
             </svg>
 
             {/* Center Content */}
-            <div className="absolute flex flex-col items-center justify-center">
-              <div className="text-5xl font-bold text-[#0f3638]">{riskScore}%</div>
+            <div className="absolute flex flex-col items-center justify-center" aria-label={`Risk score: ${riskScore} percent`}>
+              <div className="text-4xl sm:text-5xl font-bold text-[#0f3638]">{riskScore}%</div>
               <div className="text-xs text-gray-500 mt-2">Risk Score</div>
             </div>
           </div>
 
           {/* Risk Label */}
-          <div className="mt-6 text-center">
-            <div className="text-lg font-bold text-red-600 dark:text-red-400">
+          <div className="mt-4 sm:mt-6 text-center">
+            <div className="text-base sm:text-lg font-bold text-red-600 dark:text-red-400">
               {riskLevel} — Immediate Review Required
             </div>
-            <div className="text-xs text-gray-500 dark:text-gray-400 mt-3">
+            <div className="text-xs text-gray-500 dark:text-gray-400 mt-2 sm:mt-3">
               Computed using Inclusion-Exclusion Principle · DMS Unit I
             </div>
           </div>
-        </div>
+        </section>
 
         {/* RIGHT: Interaction List */}
-        <div className="flex flex-col space-y-4">
-          <div className="flex-1 space-y-3 max-h-96 overflow-y-auto pr-2">
+        <section className="flex flex-col space-y-4" aria-label="Detected drug interactions">
+          <div className="flex-1 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto pr-2" role="list" aria-label={`${interactions.length} drug interactions detected`}>
             {interactions.map((interaction, idx) => {
               const colors = getSeverityColor(interaction.severity);
               return (
                 <div
                   key={idx}
-                  className={`p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-all ${colors.bg}`}
+                  className={`p-3 sm:p-4 rounded-lg border border-gray-200 dark:border-gray-700 transition-all ${colors.bg}`}
+                  role="listitem"
                 >
-                  <div className="flex items-center justify-between mb-2">
+                  <div className="flex flex-col sm:flex-row items-start sm:items-center justify-between gap-2 sm:gap-4 mb-2">
                     <div className="flex items-center gap-2 flex-1">
                       <span className="font-semibold text-gray-900 dark:text-white">
                         {interaction.drugA}
@@ -171,9 +173,9 @@ export function InteractionResultsPanel() {
           </div>
 
           {/* Dangerous Combination Card */}
-          <div className="border-2 border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-950/30 rounded-lg p-4">
+          <article className="border-2 border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-950/30 rounded-lg p-4" role="alert" aria-label="Critical dangerous drug combination alert">
             <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" />
+              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
               <div className="flex-1">
                 <h3 className="font-bold text-red-900 dark:text-red-200 mb-2">
                   Dangerous Combination Detected
@@ -186,9 +188,9 @@ export function InteractionResultsPanel() {
                 </div>
               </div>
             </div>
-          </div>
-        </div>
+          </article>
+        </section>
       </div>
-    </div>
+    </main>
   );
 }

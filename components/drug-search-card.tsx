@@ -98,17 +98,18 @@ export function DrugSearchCard() {
 
   return (
     <Card className="w-full max-w-2xl border border-border bg-card">
-      <CardHeader className="bg-gradient-to-r from-teal-700 to-teal-800 dark:from-teal-950 dark:to-teal-900 text-white rounded-t-lg">
-        <CardTitle>Drug Interaction Analyzer</CardTitle>
-        <CardDescription className="text-teal-100">Search and add medications to check for interactions</CardDescription>
+      <CardHeader className="bg-gradient-to-r from-teal-700 to-teal-800 dark:from-teal-950 dark:to-teal-900 text-white rounded-t-lg p-4 sm:p-6">
+        <CardTitle className="text-xl sm:text-2xl">Drug Interaction Analyzer</CardTitle>
+        <CardDescription className="text-teal-100 text-sm">Search and add medications to check for interactions</CardDescription>
       </CardHeader>
 
-      <CardContent className="space-y-6 pt-6">
+      <CardContent className="space-y-4 sm:space-y-6 pt-4 sm:pt-6 p-4 sm:p-6">
         {/* Search Input */}
         <div className="relative">
-          <label className="text-sm font-medium text-foreground mb-2 block">Search Drugs</label>
+          <label htmlFor="drug-search" className="text-sm font-medium text-foreground mb-2 block">Search Drugs</label>
           <div className="relative">
             <Input
+              id="drug-search"
               placeholder="Search by drug name or class (e.g., Warfarin, Antibiotic)"
               value={searchQuery}
               onChange={(e) => {
@@ -117,17 +118,26 @@ export function DrugSearchCard() {
               }}
               onFocus={() => searchQuery && setShowDropdown(true)}
               className="pr-10"
+              aria-expanded={showDropdown && filteredDrugs.length > 0}
+              aria-controls="drug-dropdown"
             />
-            <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-muted-foreground" />
+            <ChevronDown className="absolute right-3 top-3 w-4 h-4 text-muted-foreground pointer-events-none" aria-hidden="true" />
 
             {/* Autocomplete Dropdown */}
             {showDropdown && filteredDrugs.length > 0 && (
-              <div className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50">
+              <div 
+                id="drug-dropdown"
+                className="absolute top-full left-0 right-0 mt-1 bg-card border border-border rounded-md shadow-lg z-50"
+                role="listbox"
+                aria-label="Available drugs"
+              >
                 {filteredDrugs.map((drug) => (
                   <button
                     key={drug.id}
                     onClick={() => handleDrugSelect(drug)}
                     className="w-full text-left px-4 py-3 hover:bg-muted transition-colors first:rounded-t-md last:rounded-b-md border-b border-border last:border-b-0"
+                    role="option"
+                    aria-label={`${drug.name} - ${drug.class}`}
                   >
                     <div className="font-medium text-sm">{drug.name}</div>
                     <div className="text-xs text-muted-foreground">{drug.class}</div>
@@ -167,11 +177,17 @@ export function DrugSearchCard() {
 
         {/* Terminal Log Panel */}
         <div className="space-y-2">
-          <label className="text-sm font-medium text-foreground">System Log</label>
-          <div className="bg-slate-900 dark:bg-slate-950 rounded-md p-4 border border-slate-700 dark:border-slate-800 font-mono text-xs text-slate-300 dark:text-slate-400 space-y-1 min-h-24 max-h-32 overflow-y-auto">
+          <label htmlFor="system-log" className="text-sm font-medium text-foreground">System Log</label>
+          <div 
+            id="system-log"
+            className="bg-slate-900 dark:bg-slate-950 rounded-md p-4 border border-slate-700 dark:border-slate-800 font-mono text-xs text-slate-300 dark:text-slate-400 space-y-1 min-h-24 max-h-32 overflow-y-auto"
+            role="log"
+            aria-live="polite"
+            aria-label="System activity log"
+          >
             {logs.map((log, idx) => (
               <div key={idx} className="text-slate-400 dark:text-slate-500">
-                <span className="text-green-500 dark:text-green-600">➜</span> <span>{log}</span>
+                <span className="text-green-500 dark:text-green-600" aria-hidden="true">➜</span> <span>{log}</span>
               </div>
             ))}
           </div>

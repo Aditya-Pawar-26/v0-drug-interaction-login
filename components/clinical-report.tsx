@@ -142,34 +142,38 @@ export function ClinicalReport() {
       `}</style>
 
       {/* Header with Action Buttons */}
-      <div className="sticky top-0 z-10 bg-white border-b no-print">
-        <div className="max-w-5xl mx-auto px-6 py-4 flex justify-between items-center">
-          <h1 className="text-2xl font-bold text-gray-900">Clinical Drug Interaction Report</h1>
-          <div className="flex gap-3">
+      <nav className="sticky top-0 z-10 bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-gray-700 no-print">
+        <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
+          <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Clinical Drug Interaction Report</h1>
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
             <Button
               variant="outline"
               onClick={handleDownloadPDF}
-              className="gap-2"
+              className="gap-2 flex-1 sm:flex-none"
+              aria-label="Download report as PDF"
             >
               <Download className="w-4 h-4" />
-              Download PDF
+              <span className="hidden sm:inline">Download PDF</span>
+              <span className="sm:hidden">PDF</span>
             </Button>
             <Button
               onClick={handlePrint}
-              className="gap-2 bg-teal-700 hover:bg-teal-800 text-white"
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-1 sm:flex-none"
+              aria-label="Print report"
             >
               <Printer className="w-4 h-4" />
-              Print Report
+              <span className="hidden sm:inline">Print Report</span>
+              <span className="sm:hidden">Print</span>
             </Button>
           </div>
         </div>
-      </div>
+      </nav>
 
       {/* Main Report Content */}
-      <div className="print-container max-w-5xl mx-auto">
+      <main className="print-container max-w-5xl mx-auto">
         {/* Section 1: Header */}
-        <div className="mb-8 print:mb-6">
-          <div className="bg-gradient-to-r from-teal-700 to-teal-800 text-white rounded-lg p-8 print:p-6 flex justify-between items-start">
+        <article className="mb-6 sm:mb-8 print:mb-6">
+          <div className="bg-gradient-to-r from-teal-700 to-teal-800 text-white rounded-lg p-4 sm:p-6 lg:p-8 print:p-6 flex flex-col lg:flex-row justify-between items-start gap-4 sm:gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-4">
                 <div>
@@ -197,11 +201,11 @@ export function ClinicalReport() {
               </div>
             </div>
           </div>
-        </div>
+        </article>
 
         {/* Section 2: Interaction Table */}
-        <div className="mb-8 print:mb-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 print:mb-3">Detected Drug Interactions</h3>
+        <section className="mb-6 sm:mb-8 print:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">Detected Drug Interactions</h2>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -243,14 +247,14 @@ export function ClinicalReport() {
               </table>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Section 3: Dangerous Combinations */}
-        <div className="mb-8 print:mb-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 print:mb-3">
-            <AlertCircle className="w-5 h-5 inline-block mr-2 text-red-600" />
+        <section className="mb-6 sm:mb-8 print:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3 flex items-center gap-2">
+            <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
             Dangerous Combination Detected
-          </h3>
+          </h2>
           <Card className="border-2 border-red-500 bg-red-50 p-6 print:p-4">
             <div className="space-y-3">
               <p className="text-lg font-semibold text-gray-900">
@@ -266,11 +270,11 @@ export function ClinicalReport() {
               </div>
             </div>
           </Card>
-        </div>
+        </section>
 
         {/* Section 4: Substitution Suggestions */}
-        <div className="mb-8 print:mb-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 print:mb-3">Substitution Suggestions</h3>
+        <section className="mb-6 sm:mb-8 print:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">Substitution Suggestions</h2>
           <div className="space-y-3">
             <Card className="border border-gray-200 p-5 print:p-4 print:break-inside-avoid">
               <div className="flex items-center justify-between">
@@ -311,11 +315,11 @@ export function ClinicalReport() {
               </Badge>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Section 5: Algorithms Used */}
-        <div className="mb-8 print:mb-6">
-          <h3 className="text-xl font-bold text-gray-900 mb-4 print:mb-3">Algorithms & Computational Methods</h3>
+        <section className="mb-6 sm:mb-8 print:mb-6">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">Algorithms & Computational Methods</h2>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
               <table className="w-full text-sm">
@@ -346,22 +350,22 @@ export function ClinicalReport() {
               </table>
             </div>
           </div>
-        </div>
+        </section>
 
         {/* Footer */}
-        <div className="border-t border-gray-200 pt-6 print:pt-4 mt-8 print:mt-6">
-          <div className="bg-gray-50 rounded-lg p-6 print:p-4 text-sm text-gray-600 space-y-2">
+        <footer className="border-t border-gray-200 dark:border-gray-700 pt-4 sm:pt-6 print:pt-4 mt-6 sm:mt-8 print:mt-6">
+          <div className="bg-gray-50 dark:bg-gray-900/50 rounded-lg p-4 sm:p-6 print:p-4 text-xs sm:text-sm text-gray-600 dark:text-gray-400 space-y-2">
             <p>
               <span className="font-semibold">Disclaimer:</span> This report is generated for clinical reference only. 
               All medication changes must be approved by the treating physician. Patient should not modify medication regimen 
               based on this report without direct consultation with their healthcare provider.
             </p>
-            <p className="text-xs text-gray-500 mt-4">
+            <p className="text-xs text-gray-500 dark:text-gray-500 mt-3 sm:mt-4">
               Report Generated: {new Date().toLocaleDateString()} at {new Date().toLocaleTimeString()}
             </p>
           </div>
-        </div>
-      </div>
+        </footer>
+      </main>
     </div>
   );
 }
