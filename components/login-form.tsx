@@ -1,6 +1,7 @@
 'use client';
 
 import { useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { ChevronLeft, Mail, Lock } from 'lucide-react';
@@ -11,19 +12,36 @@ interface LoginFormProps {
 }
 
 export default function LoginForm({ role, onBack }: LoginFormProps) {
+  const router = useRouter();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [isLoading, setIsLoading] = useState(false);
+  const [error, setError] = useState('');
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
+    setError('');
+    
+    // Validate inputs
+    if (!email || !password) {
+      setError('Please fill in all fields');
+      return;
+    }
+    
     setIsLoading(true);
     
-    // Simulate API call
-    await new Promise(resolve => setTimeout(resolve, 1000));
-    
-    console.log('Login:', { email, password, role });
-    setIsLoading(false);
+    try {
+      // Simulate API call
+      await new Promise(resolve => setTimeout(resolve, 1000));
+      
+      // Navigate to profile page for doctor, or results page for patient
+      const destination = role === 'doctor' ? '/profile' : '/results';
+      router.push(destination);
+    } catch (err) {
+      setError('Login failed. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const roleLabel = role === 'doctor' ? 'Doctor' : 'Patient';
@@ -48,6 +66,13 @@ export default function LoginForm({ role, onBack }: LoginFormProps) {
           Enter your credentials to access the system
         </p>
       </div>
+
+      {/* Error Message */}
+      {error && (
+        <div className="p-3 bg-red-50 dark:bg-red-950/30 border border-red-200 dark:border-red-800 rounded-md text-sm text-red-600 dark:text-red-400">
+          {error}
+        </div>
+      )}
 
       {/* Form */}
       <form onSubmit={handleSubmit} className="space-y-4">
@@ -109,7 +134,7 @@ export default function LoginForm({ role, onBack }: LoginFormProps) {
       {/* Footer */}
       <div className="pt-2 border-t border-border/50">
         <p className="text-xs text-muted-foreground text-center">
-          Don&apos;t have an account? <a href="#" className="text-primary hover:underline font-medium">Create one</a>
+          Don&apos;t have an account? <button onClick={onBack} className="text-primary hover:underline font-medium bg-none border-none cursor-pointer">Use a different role</button>
         </p>
       </div>
     </div>

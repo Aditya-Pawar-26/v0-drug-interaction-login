@@ -1,3 +1,4 @@
+import { useRouter } from 'next/navigation';
 import { Button } from '@/components/ui/button';
 import { Stethoscope, User } from 'lucide-react';
 
@@ -6,6 +7,7 @@ interface RoleSelectorProps {
 }
 
 export default function RoleSelector({ onSelectRole }: RoleSelectorProps) {
+  const router = useRouter();
   return (
     <div className="space-y-4">
       <p className="text-sm text-muted-foreground text-center">
@@ -33,7 +35,7 @@ export default function RoleSelector({ onSelectRole }: RoleSelectorProps) {
       </div>
 
       <p className="text-xs text-muted-foreground text-center pt-2">
-        Don&apos;t have an account? <a href="#" className="text-primary hover:underline font-medium">Sign up here</a>
+        Don&apos;t have an account? <button onClick={() => router.push('/signup')} className="text-primary hover:underline font-medium bg-none border-none cursor-pointer">Sign up here</button>
       </p>
     </div>
   );
