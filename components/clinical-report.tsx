@@ -4,13 +4,7 @@ import { AlertCircle, Download, Printer } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
 import { Card } from '@/components/ui/card';
-
-interface Interaction {
-  drugA: string;
-  drugB: string;
-  severity: 'MAJOR' | 'MODERATE' | 'MINOR';
-  recommendation: string;
-}
+import { useApp } from '@/context/AppContext';
 
 interface Algorithm {
   name: string;
@@ -18,39 +12,6 @@ interface Algorithm {
   complexity: string;
   purpose: string;
 }
-
-const interactions: Interaction[] = [
-  {
-    drugA: 'Warfarin',
-    drugB: 'Aspirin',
-    severity: 'MAJOR',
-    recommendation: 'Avoid concurrent use. Monitor INR closely if unavoidable.',
-  },
-  {
-    drugA: 'Warfarin',
-    drugB: 'Ibuprofen',
-    severity: 'MAJOR',
-    recommendation: 'Contraindicated. Use alternative analgesic.',
-  },
-  {
-    drugA: 'Aspirin',
-    drugB: 'Ibuprofen',
-    severity: 'MODERATE',
-    recommendation: 'Avoid combined use. May increase GI bleeding risk.',
-  },
-  {
-    drugA: 'Lisinopril',
-    drugB: 'Potassium Chloride',
-    severity: 'MODERATE',
-    recommendation: 'Monitor serum potassium levels regularly.',
-  },
-  {
-    drugA: 'Warfarin',
-    drugB: 'Lisinopril',
-    severity: 'MINOR',
-    recommendation: 'Minor interaction. Regular monitoring recommended.',
-  },
-];
 
 const algorithms: Algorithm[] = [
   {
@@ -85,12 +46,15 @@ const algorithms: Algorithm[] = [
   },
 ];
 
-const getSeverityColor = (severity: string) => {
+const getSeverityColor = (severity: 'major' | 'moderate' | 'minor' | string) => {
   switch (severity) {
+    case 'major':
     case 'MAJOR':
       return 'bg-red-50 border-red-200';
+    case 'moderate':
     case 'MODERATE':
       return 'bg-yellow-50 border-yellow-200';
+    case 'minor':
     case 'MINOR':
       return 'bg-green-50 border-green-200';
     default:
@@ -98,12 +62,15 @@ const getSeverityColor = (severity: string) => {
   }
 };
 
-const getSeverityBadgeColor = (severity: string) => {
+const getSeverityBadgeColor = (severity: 'major' | 'moderate' | 'minor' | string) => {
   switch (severity) {
+    case 'major':
     case 'MAJOR':
       return 'bg-red-100 text-red-800';
+    case 'moderate':
     case 'MODERATE':
       return 'bg-yellow-100 text-yellow-800';
+    case 'minor':
     case 'MINOR':
       return 'bg-green-100 text-green-800';
     default:
@@ -112,12 +79,28 @@ const getSeverityBadgeColor = (severity: string) => {
 };
 
 export function ClinicalReport() {
+  const { interactionResults, riskScore, detectedCliques, selectedDrugs } = useApp();
+
   const handlePrint = () => {
     window.print();
   };
 
   const handleDownloadPDF = () => {
-    alert('PDF download functionality would be implemented with a PDF library like jsPDF or pdfkit');
+    window.print();
+  };
+
+  // Get today's date
+  const reportDate = new Date().toLocaleDateString('en-US', {
+    year: 'numeric',
+    month: 'long',
+    day: 'numeric',
+  });
+
+  // Get risk level
+  const getRiskLevel = () => {
+    if (riskScore <= 30) return 'LOW RISK';
+    if (riskScore <= 60) return 'MODERATE RISK';
+    return 'HIGH RISK';
   };
 
   return (
@@ -125,11 +108,14 @@ export function ClinicalReport() {
       {/* Print Styles */}
       <style>{`
         @media print {
+          nav,
+          button,
           .no-print {
             display: none !important;
           }
           body {
-            background: white;
+            background: white !important;
+            color: black !important;
             margin: 0;
             padding: 0;
           }
@@ -138,6 +124,16 @@ export function ClinicalReport() {
             margin: 0;
             padding: 40px;
           }
+          .print-section {
+            break-inside: avoid;
+          }
+          table {
+            border: 1px solid #ccc !important;
+          }
+          table th,
+          table td {
+            border: 1px solid #ccc !important;
+          }
         }
       `}</style>
 
@@ -145,11 +141,11 @@ export function ClinicalReport() {
       <nav className="sticky top-0 z-10 bg-white dark:bg-slate-950 border-b border-gray-200 dark:border-gray-700 no-print">
         <div className="max-w-5xl mx-auto px-4 sm:px-6 py-3 sm:py-4 flex flex-col sm:flex-row justify-between items-start sm:items-center gap-3 sm:gap-4">
           <h1 className="text-xl sm:text-2xl font-bold text-gray-900 dark:text-white">Clinical Drug Interaction Report</h1>
-          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto">
+          <div className="flex gap-2 sm:gap-3 w-full sm:w-auto no-print">
             <Button
               variant="outline"
               onClick={handleDownloadPDF}
-              className="gap-2 flex-1 sm:flex-none"
+              className="gap-2 flex-1 sm:flex-none no-print"
               aria-label="Download report as PDF"
             >
               <Download className="w-4 h-4" />
@@ -158,7 +154,7 @@ export function ClinicalReport() {
             </Button>
             <Button
               onClick={handlePrint}
-              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-1 sm:flex-none"
+              className="gap-2 bg-primary hover:bg-primary/90 text-primary-foreground flex-1 sm:flex-none no-print"
               aria-label="Print report"
             >
               <Printer className="w-4 h-4" />
@@ -172,111 +168,131 @@ export function ClinicalReport() {
       {/* Main Report Content */}
       <main className="print-container max-w-5xl mx-auto">
         {/* Section 1: Header */}
-        <article className="mb-6 sm:mb-8 print:mb-6">
+        <article className="mb-6 sm:mb-8 print:mb-6 print-section">
           <div className="bg-gradient-to-r from-teal-700 to-teal-800 text-white rounded-lg p-4 sm:p-6 lg:p-8 print:p-6 flex flex-col lg:flex-row justify-between items-start gap-4 sm:gap-6">
             <div className="space-y-3">
               <div className="flex items-center gap-4">
                 <div>
-                  <h2 className="text-3xl font-bold">John Anderson</h2>
-                  <p className="text-teal-100 mt-1">52 years old | Blood Group: O+</p>
+                  <h2 className="text-3xl font-bold">Patient Report</h2>
+                  <p className="text-teal-100 mt-1">{selectedDrugs.length} medications analyzed</p>
                 </div>
               </div>
               <div className="space-y-1 text-sm">
                 <p>
-                  <span className="font-semibold">Attending Doctor:</span> Dr. Sarah Mitchell, MD
+                  <span className="font-semibold">Selected Drugs:</span> {selectedDrugs.map((d) => d.name).join(', ') || 'None'}
                 </p>
                 <p>
-                  <span className="font-semibold">Report Date:</span> May 2, 2026
+                  <span className="font-semibold">Report Date:</span> {reportDate}
                 </p>
                 <p>
-                  <span className="font-semibold">Hospital:</span> Clinical Care Hospital
+                  <span className="font-semibold">Analysis Type:</span> Drug Interaction Report
                 </p>
               </div>
             </div>
             <div className="text-right">
-              <div className="bg-white text-red-600 rounded-lg px-4 py-3 inline-block">
+              <div className="bg-white text-gray-600 rounded-lg px-4 py-3 inline-block">
                 <p className="text-sm font-medium text-gray-700">Risk Score</p>
-                <p className="text-4xl font-bold">74%</p>
-                <p className="text-xs font-semibold text-red-600 mt-1">HIGH RISK</p>
+                <p className="text-4xl font-bold">{riskScore}%</p>
+                <p className={`text-xs font-semibold mt-1 ${riskScore <= 30 ? 'text-green-600' : riskScore <= 60 ? 'text-yellow-600' : 'text-red-600'}`}>
+                  {getRiskLevel()}
+                </p>
               </div>
             </div>
           </div>
         </article>
 
         {/* Section 2: Interaction Table */}
-        <section className="mb-6 sm:mb-8 print:mb-6">
-          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">Detected Drug Interactions</h2>
-          <div className="border border-gray-200 rounded-lg overflow-hidden">
-            <div className="overflow-x-auto">
-              <table className="w-full text-sm">
-                <thead>
-                  <tr className="bg-gray-100 border-b border-gray-200">
-                    <th className="px-6 py-3 text-left font-semibold text-gray-900">Drug A</th>
-                    <th className="px-6 py-3 text-center font-semibold text-gray-900">Interaction</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-900">Drug B</th>
-                    <th className="px-6 py-3 text-center font-semibold text-gray-900">Severity</th>
-                    <th className="px-6 py-3 text-left font-semibold text-gray-900">Clinical Recommendation</th>
-                  </tr>
-                </thead>
-                <tbody>
-                  {interactions.map((interaction, idx) => (
-                    <tr
-                      key={idx}
-                      className={`border-b border-gray-200 print:break-inside-avoid ${getSeverityColor(interaction.severity)}`}
-                    >
-                      <td className="px-6 py-4 font-medium text-gray-900">
-                        {interaction.drugA}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <span className="text-gray-500">↔</span>
-                      </td>
-                      <td className="px-6 py-4 font-medium text-gray-900">
-                        {interaction.drugB}
-                      </td>
-                      <td className="px-6 py-4 text-center">
-                        <Badge className={getSeverityBadgeColor(interaction.severity)}>
-                          {interaction.severity}
-                        </Badge>
-                      </td>
-                      <td className="px-6 py-4 text-gray-700">
-                        {interaction.recommendation}
-                      </td>
+        <section className="mb-6 sm:mb-8 print:mb-6 print-section">
+          <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">
+            Detected Drug Interactions ({interactionResults.length})
+          </h2>
+          {interactionResults.length === 0 ? (
+            <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 p-4 text-center">
+              <p className="text-green-800 dark:text-green-200 font-semibold">No interactions detected</p>
+            </Card>
+          ) : (
+            <div className="border border-gray-200 rounded-lg overflow-hidden">
+              <div className="overflow-x-auto">
+                <table className="w-full text-sm">
+                  <thead>
+                    <tr className="bg-gray-100 border-b border-gray-200">
+                      <th className="px-6 py-3 text-left font-semibold text-gray-900">Drug A</th>
+                      <th className="px-6 py-3 text-center font-semibold text-gray-900">Interaction</th>
+                      <th className="px-6 py-3 text-left font-semibold text-gray-900">Drug B</th>
+                      <th className="px-6 py-3 text-center font-semibold text-gray-900">Severity</th>
+                      <th className="px-6 py-3 text-left font-semibold text-gray-900">Details</th>
                     </tr>
-                  ))}
-                </tbody>
-              </table>
+                  </thead>
+                  <tbody>
+                    {interactionResults.map((interaction, idx) => (
+                      <tr
+                        key={idx}
+                        className={`border-b border-gray-200 print-section ${getSeverityColor(interaction.severity)}`}
+                      >
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {interaction.drugA}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <span className="text-gray-500">↔</span>
+                        </td>
+                        <td className="px-6 py-4 font-medium text-gray-900">
+                          {interaction.drugB}
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <Badge className={getSeverityBadgeColor(interaction.severity)}>
+                            {interaction.severity.toUpperCase()}
+                          </Badge>
+                        </td>
+                        <td className="px-6 py-4 text-gray-700">
+                          Clinical interaction detected. Review before prescribing.
+                        </td>
+                      </tr>
+                    ))}
+                  </tbody>
+                </table>
+              </div>
             </div>
-          </div>
+          )}
         </section>
 
         {/* Section 3: Dangerous Combinations */}
-        <section className="mb-6 sm:mb-8 print:mb-6">
+        <section className="mb-6 sm:mb-8 print:mb-6 print-section">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3 flex items-center gap-2">
             <AlertCircle className="w-5 h-5 text-red-600 flex-shrink-0" />
-            Dangerous Combination Detected
+            Dangerous Combinations ({detectedCliques.length})
           </h2>
-          <Card className="border-2 border-red-500 bg-red-50 p-6 print:p-4">
+          {detectedCliques.length === 0 ? (
+            <Card className="bg-green-50 dark:bg-green-950/30 border-green-200 dark:border-green-800 p-4 text-center">
+              <p className="text-green-800 dark:text-green-200 font-semibold">No dangerous combinations detected</p>
+            </Card>
+          ) : (
             <div className="space-y-3">
-              <p className="text-lg font-semibold text-gray-900">
-                Warfarin + Aspirin + Ibuprofen
-              </p>
-              <p className="text-gray-700">
-                All three drugs mutually interact. Warfarin significantly increases bleeding risk when combined with both Aspirin and Ibuprofen. Additionally, Aspirin and Ibuprofen together increase gastrointestinal bleeding risk. This three-way interaction requires immediate intervention.
-              </p>
-              <div className="flex gap-2 flex-wrap">
-                <Badge className="bg-red-600 text-white">Critical</Badge>
-                <Badge className="bg-teal-600 text-white">Bron-Kerbosch Backtracking</Badge>
-                <Badge className="bg-purple-600 text-white">DAA Unit V · NP-Complete</Badge>
-              </div>
+              {detectedCliques.map((clique, idx) => (
+                <Card key={idx} className="border-2 border-red-500 bg-red-50 p-6 print:p-4 print-section">
+                  <div className="space-y-3">
+                    <p className="text-lg font-semibold text-gray-900">
+                      {clique.drugs.join(' + ')}
+                    </p>
+                    <p className="text-gray-700">
+                      {clique.drugs.length}-way drug interaction detected. All {clique.drugs.length} drugs mutually interact. This combination requires immediate clinical review and intervention.
+                    </p>
+                    <div className="flex gap-2 flex-wrap">
+                      <Badge className="bg-red-600 text-white">{clique.severity.toUpperCase()}</Badge>
+                      <Badge className="bg-teal-600 text-white">Bron-Kerbosch Backtracking</Badge>
+                      <Badge className="bg-purple-600 text-white">DAA Unit V · NP-Complete</Badge>
+                    </div>
+                  </div>
+                </Card>
+              ))}
             </div>
-          </Card>
+          )}
         </section>
 
         {/* Section 4: Substitution Suggestions */}
-        <section className="mb-6 sm:mb-8 print:mb-6">
+        <section className="mb-6 sm:mb-8 print:mb-6 print-section">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">Substitution Suggestions</h2>
           <div className="space-y-3">
-            <Card className="border border-gray-200 p-5 print:p-4 print:break-inside-avoid">
+            <Card className="border border-gray-200 p-5 print:p-4 print-section">
               <div className="flex items-center justify-between">
                 <div className="flex-1">
                   <p className="font-semibold text-gray-900">
@@ -318,7 +334,7 @@ export function ClinicalReport() {
         </section>
 
         {/* Section 5: Algorithms Used */}
-        <section className="mb-6 sm:mb-8 print:mb-6">
+        <section className="mb-6 sm:mb-8 print:mb-6 print-section">
           <h2 className="text-lg sm:text-xl font-bold text-gray-900 dark:text-white mb-3 sm:mb-4 print:mb-3">Algorithms & Computational Methods</h2>
           <div className="border border-gray-200 rounded-lg overflow-hidden">
             <div className="overflow-x-auto">
@@ -333,7 +349,7 @@ export function ClinicalReport() {
                 </thead>
                 <tbody>
                   {algorithms.map((algo, idx) => (
-                    <tr key={idx} className="border-b border-gray-200 print:break-inside-avoid hover:bg-gray-50">
+                    <tr key={idx} className="border-b border-gray-200 print-section hover:bg-gray-50">
                       <td className="px-6 py-4 font-medium text-gray-900">{algo.name}</td>
                       <td className="px-6 py-4 text-gray-700">
                         <Badge variant="outline" className="text-teal-700 border-teal-300 bg-teal-50">
