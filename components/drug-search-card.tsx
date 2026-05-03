@@ -1,6 +1,6 @@
 'use client'
 
-import { useState, useMemo } from 'react'
+import { useState, useMemo, useRef, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
 import { X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
@@ -26,13 +26,21 @@ const colorMap: Record<string, { bg: string; text: string; border: string }> = {
 
 export function DrugSearchCard() {
   const router = useRouter()
-  const { selectedDrugs, addDrug, removeDrug, analyzeInteractions, availableDrugs } = useApp()
+  const { selectedDrugs, addDrug, removeDrug, analyzeInteractions, availableDrugs, interactionResults } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
   const [showDropdown, setShowDropdown] = useState(false)
   const [logs, setLogs] = useState<string[]>([
-    '$ Drug Interaction Checker initialized',
-    '$ Awaiting drug input...',
+    '▶ Drug Interaction Checker initialized',
+    '▶ Awaiting drug input...',
   ])
+  const logPanelRef = useRef<HTMLDivElement>(null)
+
+  // Auto-scroll log panel to bottom
+  useEffect(() => {
+    if (logPanelRef.current) {
+      logPanelRef.current.scrollTop = logPanelRef.current.scrollHeight
+    }
+  }, [logs])
 
   const filteredDrugs = useMemo(() => {
     if (!searchQuery) return []
@@ -49,17 +57,44 @@ export function DrugSearchCard() {
     setSearchQuery('')
     setShowDropdown(false)
 
-    // Add log entry
-    const newLog = `$ Graph node added: ${drug.name} · Adjacency list updated`
-    setLogs((prev) => [...prev.slice(-3), newLog])
+    // Add node added log with 300ms delay
+    setTimeout(() => {
+      setLogs((prev) => [...prev, `▶ Node added: ${drug.name} | Adjacency list updated | O(1)`])
+    }, 0)
 
-    // Simulate interaction detection if we have multiple drugs
+    // Check for interactions with existing drugs
     if (selectedDrugs.length > 0) {
-      const lastDrug = selectedDrugs[selectedDrugs.length - 1]
       setTimeout(() => {
-        const interactionLog = `$ Edge detected: ${lastDrug.name} ↔ ${drug.name} · Severity: ${Math.random() > 0.5 ? 'MAJOR' : 'MINOR'}`
-        setLogs((prev) => [...prev.slice(-3), interactionLog])
+        setLogs((prev) => [...prev, `▶ Checking pairs via DFS | O(V+E) | DAA Unit II`])
       }, 300)
+
+      // Find interactions for each existing drug pair
+      selectedDrugs.forEach((existingDrug, index) => {
+        setTimeout(() => {
+          setLogs((prev) => {
+            const lastLogs = prev.slice(-8)
+            // Check for interaction in mock data
+            const mockInteractionData = [
+              { drugA: 'Warfarin', drugB: 'Aspirin', severity: 'MAJOR' },
+              { drugA: 'Warfarin', drugB: 'Ibuprofen', severity: 'MODERATE' },
+              { drugA: 'Aspirin', drugB: 'Ibuprofen', severity: 'MODERATE' },
+              { drugA: 'Warfarin', drugB: 'Clopidogrel', severity: 'MAJOR' },
+              { drugA: 'Lisinopril', drugB: 'PotassiumChloride', severity: 'MAJOR' },
+            ]
+
+            const interaction = mockInteractionData.find(
+              (m) =>
+                (m.drugA === existingDrug.name && m.drugB === drug.name) ||
+                (m.drugA === drug.name && m.drugB === existingDrug.name)
+            )
+
+            if (interaction) {
+              return [...lastLogs, `▶ Edge: ${existingDrug.name} ↔ ${drug.name} | ${interaction.severity} | DAA Unit II`]
+            }
+            return lastLogs
+          })
+        }, 300 + (index + 1) * 300)
+      })
     }
   }
 
@@ -70,16 +105,30 @@ export function DrugSearchCard() {
 
   const handleAnalyze = () => {
     if (selectedDrugs.length < 2) {
-      setLogs((prev) => [...prev, '$ Error: Select at least 2 drugs for analysis'])
+      setLogs((prev) => [...prev, '▶ Error: Select at least 2 drugs for analysis'])
       return
     }
+
+    // Trigger analysis to populate context
     analyzeInteractions()
-    const analyzeLog = `$ Running DFS traversal · O(V+E) · ${selectedDrugs.length} nodes`
-    const broLog = `$ Bron-Kerbosch clique check triggered · DAA Unit V`
-    setLogs((prev) => [...prev.slice(-2), analyzeLog, broLog])
+
+    // Animated logs for analysis process
+    setTimeout(() => {
+      setLogs((prev) => [...prev, `▶ Running DFS traversal | O(V+E) | DAA Unit II`])
+    }, 100)
+
+    setTimeout(() => {
+      setLogs((prev) => [...prev, `▶ Bron-Kerbosch clique detection | DAA Unit V — NP-Complete`])
+    }, 400)
+
+    setTimeout(() => {
+      setLogs((prev) => [...prev, `▶ Analysis complete | Found ${interactionResults.length} interactions`])
+    }, 700)
+
+    // Navigate after analysis completes
     setTimeout(() => {
       router.push('/results')
-    }, 800)
+    }, 1000)
   }
 
   return (
@@ -165,15 +214,16 @@ export function DrugSearchCard() {
         <div className="space-y-2">
           <label htmlFor="system-log" className="text-sm font-medium text-foreground">System Log</label>
           <div 
+            ref={logPanelRef}
             id="system-log"
-            className="bg-slate-900 dark:bg-slate-950 rounded-md p-4 border border-slate-700 dark:border-slate-800 font-mono text-xs text-slate-300 dark:text-slate-400 space-y-1 min-h-24 max-h-32 overflow-y-auto"
+            className="bg-slate-900 dark:bg-slate-950 rounded-md p-4 border border-slate-700 dark:border-slate-800 font-mono text-xs text-slate-300 dark:text-slate-400 space-y-1 min-h-24 max-h-40 overflow-y-auto"
             role="log"
             aria-live="polite"
             aria-label="System activity log"
           >
             {logs.map((log, idx) => (
-              <div key={idx} className="text-slate-400 dark:text-slate-500">
-                <span className="text-green-500 dark:text-green-600" aria-hidden="true">➜</span> <span>{log}</span>
+              <div key={idx} className="text-slate-300 dark:text-slate-400">
+                <span className="text-green-400 dark:text-green-500 font-bold" aria-hidden="true">$</span> <span>{log}</span>
               </div>
             ))}
           </div>
