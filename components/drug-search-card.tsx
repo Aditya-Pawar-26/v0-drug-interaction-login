@@ -1,46 +1,33 @@
 'use client'
 
 import { useState, useMemo } from 'react'
+import { useRouter } from 'next/navigation'
 import { X, ChevronDown } from 'lucide-react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card'
 import { Input } from '@/components/ui/input'
-
-interface Drug {
-  id: string
-  name: string
-  class: string
-  color: 'blue' | 'orange' | 'purple' | 'green' | 'red'
-}
-
-const drugDatabase: Drug[] = [
-  { id: '1', name: 'Warfarin', class: 'Anticoagulant', color: 'blue' },
-  { id: '2', name: 'Aspirin', class: 'NSAID', color: 'orange' },
-  { id: '3', name: 'Ibuprofen', class: 'NSAID', color: 'orange' },
-  { id: '4', name: 'Metformin', class: 'Antidiabetic', color: 'purple' },
-  { id: '5', name: 'Lisinopril', class: 'ACE Inhibitor', color: 'green' },
-  { id: '6', name: 'Atorvastatin', class: 'Statin', color: 'red' },
-  { id: '7', name: 'Amoxicillin', class: 'Antibiotic', color: 'blue' },
-  { id: '8', name: 'Amlodipine', class: 'Calcium Channel Blocker', color: 'green' },
-  { id: '9', name: 'Diclofenac', class: 'NSAID', color: 'orange' },
-  { id: '10', name: 'Glibenclamide', class: 'Antidiabetic', color: 'purple' },
-]
+import { useApp } from '@/context/AppContext'
 
 const colorMap: Record<string, { bg: string; text: string; border: string }> = {
-  blue: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
-  orange: { bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
-  purple: { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' },
-  green: { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-300', border: 'border-green-200 dark:border-green-800' },
-  red: { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', border: 'border-red-200 dark:border-red-800' },
-}
-
-interface SelectedDrug extends Drug {
-  dosage: string
+  Anticoagulant: { bg: 'bg-blue-50 dark:bg-blue-950', text: 'text-blue-700 dark:text-blue-300', border: 'border-blue-200 dark:border-blue-800' },
+  NSAID: { bg: 'bg-orange-50 dark:bg-orange-950', text: 'text-orange-700 dark:text-orange-300', border: 'border-orange-200 dark:border-orange-800' },
+  Antidiabetic: { bg: 'bg-purple-50 dark:bg-purple-950', text: 'text-purple-700 dark:text-purple-300', border: 'border-purple-200 dark:border-purple-800' },
+  'Pain Reliever': { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-300', border: 'border-green-200 dark:border-green-800' },
+  'Blood Thinner': { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', border: 'border-red-200 dark:border-red-800' },
+  'ACE Inhibitor': { bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-300', border: 'border-yellow-200 dark:border-yellow-800' },
+  'Antiplatelet': { bg: 'bg-indigo-50 dark:bg-indigo-950', text: 'text-indigo-700 dark:text-indigo-300', border: 'border-indigo-200 dark:border-indigo-800' },
+  'Electrolyte': { bg: 'bg-pink-50 dark:bg-pink-950', text: 'text-pink-700 dark:text-pink-300', border: 'border-pink-200 dark:border-pink-800' },
+  'Antibiotic': { bg: 'bg-cyan-50 dark:bg-cyan-950', text: 'text-cyan-700 dark:text-cyan-300', border: 'border-cyan-200 dark:border-cyan-800' },
+  'Antineoplastic': { bg: 'bg-violet-50 dark:bg-violet-950', text: 'text-violet-700 dark:text-violet-300', border: 'border-violet-200 dark:border-violet-800' },
+  'Statin': { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', border: 'border-red-200 dark:border-red-800' },
+  'Food': { bg: 'bg-lime-50 dark:bg-lime-950', text: 'text-lime-700 dark:text-lime-300', border: 'border-lime-200 dark:border-lime-800' },
+  'Substance': { bg: 'bg-gray-50 dark:bg-gray-950', text: 'text-gray-700 dark:text-gray-300', border: 'border-gray-200 dark:border-gray-800' },
 }
 
 export function DrugSearchCard() {
+  const router = useRouter()
+  const { selectedDrugs, addDrug, removeDrug, analyzeInteractions, availableDrugs } = useApp()
   const [searchQuery, setSearchQuery] = useState('')
-  const [selectedDrugs, setSelectedDrugs] = useState<SelectedDrug[]>([])
   const [showDropdown, setShowDropdown] = useState(false)
   const [logs, setLogs] = useState<string[]>([
     '$ Drug Interaction Checker initialized',
@@ -49,17 +36,16 @@ export function DrugSearchCard() {
 
   const filteredDrugs = useMemo(() => {
     if (!searchQuery) return []
-    return drugDatabase.filter(
+    return availableDrugs.filter(
       (drug) =>
         (drug.name.toLowerCase().includes(searchQuery.toLowerCase()) ||
           drug.class.toLowerCase().includes(searchQuery.toLowerCase())) &&
         !selectedDrugs.some((selected) => selected.id === drug.id)
     )
-  }, [searchQuery, selectedDrugs])
+  }, [searchQuery, selectedDrugs, availableDrugs])
 
-  const handleDrugSelect = (drug: Drug) => {
-    const newDrug: SelectedDrug = { ...drug, dosage: '1 tablet daily' }
-    setSelectedDrugs([...selectedDrugs, newDrug])
+  const handleDrugSelect = (drug: typeof availableDrugs[0]) => {
+    addDrug(drug)
     setSearchQuery('')
     setShowDropdown(false)
 
@@ -77,13 +63,9 @@ export function DrugSearchCard() {
     }
   }
 
-  const removeDrug = (drugId: string) => {
-    const removedDrug = selectedDrugs.find((d) => d.id === drugId)
-    setSelectedDrugs(selectedDrugs.filter((d) => d.id !== drugId))
-    if (removedDrug) {
-      const newLog = `$ Node removed: ${removedDrug.name} · Graph updated`
-      setLogs((prev) => [...prev.slice(-3), newLog])
-    }
+  const handleRemoveDrug = (drugId: number) => {
+    removeDrug(drugId)
+    setLogs((prev) => [...prev.slice(-3), `$ Drug removed from analysis`])
   }
 
   const handleAnalyze = () => {
@@ -91,9 +73,13 @@ export function DrugSearchCard() {
       setLogs((prev) => [...prev, '$ Error: Select at least 2 drugs for analysis'])
       return
     }
-    const analyzeLog = `$ Running DFS traversal · O(V+E) · ${selectedDrugs.length} nodes, ${selectedDrugs.length - 1} edges`
-    const broLog = `$ Bron-Kerbosch clique check triggered · DAA Unit V · Processing...`
+    analyzeInteractions()
+    const analyzeLog = `$ Running DFS traversal · O(V+E) · ${selectedDrugs.length} nodes`
+    const broLog = `$ Bron-Kerbosch clique check triggered · DAA Unit V`
     setLogs((prev) => [...prev.slice(-2), analyzeLog, broLog])
+    setTimeout(() => {
+      router.push('/results')
+    }, 800)
   }
 
   return (
@@ -154,7 +140,7 @@ export function DrugSearchCard() {
             <label className="text-sm font-medium text-foreground">Added Medications</label>
             <div className="flex flex-wrap gap-2">
               {selectedDrugs.map((drug) => {
-                const colors = colorMap[drug.color]
+                const colors = colorMap[drug.class] || colorMap['Antibiotic']
                 return (
                   <div
                     key={drug.id}
@@ -162,7 +148,7 @@ export function DrugSearchCard() {
                   >
                     <span>{drug.name} · {drug.dosage}</span>
                     <button
-                      onClick={() => removeDrug(drug.id)}
+                      onClick={() => handleRemoveDrug(drug.id)}
                       className="ml-1 hover:opacity-70 transition-opacity"
                       aria-label={`Remove ${drug.name}`}
                     >
@@ -196,7 +182,8 @@ export function DrugSearchCard() {
         {/* Analyze Button */}
         <Button
           onClick={handleAnalyze}
-          className="w-full bg-teal-600 hover:bg-teal-700 dark:bg-teal-700 dark:hover:bg-teal-600 text-white font-medium"
+          disabled={selectedDrugs.length < 2}
+          className="w-full bg-primary hover:bg-primary/90 disabled:opacity-50 disabled:cursor-not-allowed text-primary-foreground font-medium"
         >
           Analyze Interactions
         </Button>

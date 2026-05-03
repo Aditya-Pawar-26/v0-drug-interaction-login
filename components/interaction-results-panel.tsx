@@ -2,55 +2,13 @@
 
 import React, { useState, useEffect } from 'react';
 import { AlertCircle, ArrowRight } from 'lucide-react';
-
-interface Interaction {
-  drugA: string;
-  drugB: string;
-  severity: 'MAJOR' | 'MODERATE' | 'MINOR';
-  description: string;
-}
-
-interface DangerousCombination {
-  drugs: string[];
-  description: string;
-}
+import { useApp } from '@/context/AppContext';
 
 export function InteractionResultsPanel() {
+  const { interactionResults, riskScore, detectedCliques } = useApp();
   const [animateGauge, setAnimateGauge] = useState(false);
-  const riskScore = 74;
-  const riskLevel = 'HIGH RISK';
 
-  const interactions: Interaction[] = [
-    {
-      drugA: 'Warfarin',
-      drugB: 'Aspirin',
-      severity: 'MAJOR',
-      description: 'Increased bleeding risk due to anticoagulant and antiplatelet effects',
-    },
-    {
-      drugA: 'Metformin',
-      drugB: 'Lisinopril',
-      severity: 'MINOR',
-      description: 'Monitor renal function; dosage adjustment may be needed',
-    },
-    {
-      drugA: 'Warfarin',
-      drugB: 'Ibuprofen',
-      severity: 'MAJOR',
-      description: 'Severe GI bleeding risk and prolonged anticoagulation effects',
-    },
-    {
-      drugA: 'Aspirin',
-      drugB: 'Ibuprofen',
-      severity: 'MODERATE',
-      description: 'Duplicate antiplatelet activity; gastrointestinal ulceration risk',
-    },
-  ];
-
-  const dangerousCombination: DangerousCombination = {
-    drugs: ['Warfarin', 'Aspirin', 'Ibuprofen'],
-    description: 'All three mutually interact with severe bleeding complications',
-  };
+  const riskLevel = riskScore <= 30 ? 'LOW RISK' : riskScore <= 60 ? 'MODERATE RISK' : 'HIGH RISK';
 
   useEffect(() => {
     setAnimateGauge(true);
@@ -62,13 +20,13 @@ export function InteractionResultsPanel() {
     return '#ef4444'; // red
   };
 
-  const getSeverityColor = (severity: string) => {
+  const getSeverityColor = (severity: 'major' | 'moderate' | 'minor') => {
     switch (severity) {
-      case 'MAJOR':
+      case 'major':
         return { bg: 'bg-red-50 dark:bg-red-950', text: 'text-red-700 dark:text-red-300', badge: 'bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100' };
-      case 'MODERATE':
+      case 'moderate':
         return { bg: 'bg-yellow-50 dark:bg-yellow-950', text: 'text-yellow-700 dark:text-yellow-300', badge: 'bg-yellow-200 dark:bg-yellow-900 text-yellow-800 dark:text-yellow-100' };
-      case 'MINOR':
+      case 'minor':
         return { bg: 'bg-green-50 dark:bg-green-950', text: 'text-green-700 dark:text-green-300', badge: 'bg-green-200 dark:bg-green-900 text-green-800 dark:text-green-100' };
       default:
         return { bg: 'bg-gray-50', text: 'text-gray-700', badge: 'bg-gray-200 text-gray-800' };
@@ -141,8 +99,8 @@ export function InteractionResultsPanel() {
 
         {/* RIGHT: Interaction List */}
         <section className="flex flex-col space-y-4" aria-label="Detected drug interactions">
-          <div className="flex-1 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto pr-2" role="list" aria-label={`${interactions.length} drug interactions detected`}>
-            {interactions.map((interaction, idx) => {
+          <div className="flex-1 space-y-2 sm:space-y-3 max-h-96 overflow-y-auto pr-2" role="list" aria-label={`${interactionResults.length} drug interactions detected`}>
+            {interactionResults.map((interaction, idx) => {
               const colors = getSeverityColor(interaction.severity);
               return (
                 <div
@@ -161,7 +119,7 @@ export function InteractionResultsPanel() {
                       </span>
                     </div>
                     <span className={`px-3 py-1 rounded-full text-xs font-semibold ${colors.badge}`}>
-                      {interaction.severity}
+                      {interaction.severity.toUpperCase()}
                     </span>
                   </div>
                   <p className="text-sm text-gray-600 dark:text-gray-300">
@@ -173,22 +131,26 @@ export function InteractionResultsPanel() {
           </div>
 
           {/* Dangerous Combination Card */}
-          <article className="border-2 border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-950/30 rounded-lg p-4" role="alert" aria-label="Critical dangerous drug combination alert">
-            <div className="flex items-start gap-3">
-              <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
-              <div className="flex-1">
-                <h3 className="font-bold text-red-900 dark:text-red-200 mb-2">
-                  Dangerous Combination Detected
-                </h3>
-                <p className="text-sm text-red-800 dark:text-red-300 mb-2">
-                  {dangerousCombination.drugs.join(' + ')} — {dangerousCombination.description}
-                </p>
-                <div className="inline-block bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-1 rounded text-xs font-semibold">
-                  Bron-Kerbosch Backtracking · DAA Unit V — NP-Complete
+          {detectedCliques.length > 0 && (
+            <article className="border-2 border-red-500 dark:border-red-600 bg-red-50 dark:bg-red-950/30 rounded-lg p-4" role="alert" aria-label="Critical dangerous drug combination alert">
+              <div className="flex items-start gap-3">
+                <AlertCircle className="w-5 h-5 text-red-600 dark:text-red-400 flex-shrink-0 mt-0.5" aria-hidden="true" />
+                <div className="flex-1">
+                  <h3 className="font-bold text-red-900 dark:text-red-200 mb-2">
+                    Dangerous Combination Detected
+                  </h3>
+                  {detectedCliques.map((clique, idx) => (
+                    <p key={idx} className="text-sm text-red-800 dark:text-red-300 mb-3">
+                      {clique.drugs.join(' + ')} — all {clique.drugs.length} drugs mutually interact
+                    </p>
+                  ))}
+                  <div className="inline-block bg-red-200 dark:bg-red-900 text-red-800 dark:text-red-100 px-2 py-1 rounded text-xs font-semibold">
+                    Bron-Kerbosch Backtracking · DAA Unit V — NP-Complete
+                  </div>
                 </div>
               </div>
-            </div>
-          </article>
+            </article>
+          )}
         </section>
       </div>
     </main>
